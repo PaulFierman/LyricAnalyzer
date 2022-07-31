@@ -1,0 +1,498 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+
+/**
+ * @author Paul Fierman
+ */
+public class LyricAnalyzer {
+	
+	//make sure toLowerCase
+	//map contains every word and respective count
+	public static Map<String, Integer> wordMap(BufferedReader in, boolean byWord) {
+	        Map<String, Integer> wordsCount = new HashMap<>();
+	        Set<Character> exclude = new HashSet<>();
+	        
+	        //seperating by lines
+	        exclude.add('\t');
+		    exclude.add('\r');
+			
+		//seperating by words
+		if(byWord) {
+			exclude.add(' ');
+			exclude.add(',');
+			exclude.add('.');
+			exclude.add('(');
+			exclude.add(')');
+			exclude.add('?');
+			exclude.add('"');
+		}
+
+	        boolean validWord = true;
+	        int difference = 1;
+	        try {
+	            String line = in.readLine();
+	            while (line != null) {
+	                for (int i = 0; i < line.length(); i = i + difference) {
+	                	int index = i;
+	        	        validWord = exclude.contains(line.charAt(index));
+	        	        while (index < line.length() && validWord == exclude.contains(line.charAt(index))) {
+	        	        	index++;
+	        	        }
+	                    String next = line.substring(i, index);
+	                    String lcNext = next.toLowerCase();
+	                    validWord = exclude.contains(next.charAt(0));
+	                    if (!validWord && wordsCount.containsKey(lcNext)) {
+	                        int count = wordsCount.get(lcNext);
+	                        count++;
+	                        wordsCount.replace(lcNext, count);
+	                    } else if (!validWord) {
+	                    	wordsCount.put(lcNext, 1);
+	                    }
+	                    difference = lcNext.length();
+	                }
+	                line = in.readLine();
+	            }
+	        } catch (IOException e) {
+	        	System.err.print(e);
+	        }
+	        return wordsCount;
+	    }
+	
+	//mean of all words, excluding duplicates
+	public static double meanLen(Map<String,Integer> wordMap) {
+		double finalMean = 0.0;
+//*********** Foreach loop to fill ArrayList with Map.Pair elements... less efficent than transfer from entrySet *******
+//	          ArrayList<Map.Entry<String, Integer>> sortsArrayL = new ArrayList<Map.Entry<String, Integer>>();
+//	          for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+//	          	int count = entry.getValue();		    
+//	       		finalMed += count;
+//	       	  sortsArrayL.add(entry);
+//	    }
+//*************************************************************************************************************************		
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+		    double count = entry.getKey().length();		    
+		    finalMean += count;
+		}
+		finalMean /= (double)wordMap.size();
+		return finalMean;
+	}
+	
+	//sort a list of integers from smallest to largest
+	public static void sortList(List<Integer> toSort) {
+		toSort.sort(new Comparator<Integer>() {
+    	   		public int compare(Integer o1,Integer o2) {
+              			return o1.compareTo(o2);
+           		}
+          	});
+       }
+
+	//median of all words, excluding duplicates
+	public static double medianLen(List<Integer> sorted) {
+		int size = sorted.size();		
+		double middle = 0.0;
+        	if (sorted.size() % 2 == 0) {
+        		middle = (sorted.get(size/2) + sorted.get(size/2 - 1))/2.0;
+        	} else {
+          		middle = sorted.get(size / 2);
+        	}
+        	return middle;
+	}
+	
+	//q1 of all words, excluding duplicates
+	public static double q1(List<Integer> sorted) {
+		List<Integer> halfList = new ArrayList<Integer>();
+		for(int i = 0; i < sorted.size()/2; i++) {
+			halfList.add(sorted.get(i));
+		}
+		double middle = medianLen(halfList);
+        	return middle;
+	}
+	
+	//q3 of all words, excluding duplicates
+	public static double q3(List<Integer> sorted) {
+		List<Integer> halfList = new ArrayList<Integer>();
+		for(int i = sorted.size()/2; i < sorted.size(); i++) {
+			halfList.add(sorted.get(i));
+		}
+		double middle = medianLen(halfList);
+        	return middle;
+	}
+	
+	//list where q1 is @index 0, median is @index 1, q3 is @index 2
+	public static List<Double> quartiles(Map<String,Integer> wordMap) {
+		List<Double> q = new ArrayList<Double>();
+		List<Integer> legitList = new ArrayList<Integer>();
+
+		//make wordMap into list
+		Set<Map.Entry<String, Integer>> tempSet = wordMap.entrySet();
+		List<Map.Entry<String, Integer>> sortsArrayL = new ArrayList<Map.Entry<String, Integer>>(tempSet);
+	        for(int i = 0; i < sortsArrayL.size(); i++) {
+	 	 	legitList.add(sortsArrayL.get(i).getKey().length());
+	    	
+	    	}
+	   	sortList(legitList);
+	   
+		q.add(q1(legitList));
+		q.add(medianLen(legitList));
+		q.add(q3(legitList));
+		
+		return q;
+	}
+	
+	public static double sd(Map<String,Integer> wordMap) {
+		double finalSD = 0.0;
+		double sum = 0.0;
+		double mean = meanLen(wordMap);
+		double sub = 0.0;
+		//sum = sigma((xi - mu)^2)
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+			int count = entry.getKey().length();
+			sub = count - mean;
+		    sum += Math.pow(sub, 2);
+		}
+		//sum/N
+		sum /= wordMap.size();
+		finalSD =  Math.sqrt(sum);
+		return finalSD;
+	}
+	
+	
+//  returns list of all words of longest length in letters
+//  list may contain only one word if there is a true longest word
+	public static List<String> longest(Map<String,Integer> wordMap) {
+		//sizes of all words to be sorted
+		String[]words = wordMap.keySet().toArray(new String[0]);
+		int max = Integer.MIN_VALUE;
+		for(int i = 0; i < words.length; i++) {
+		    String word = words[i];
+		    if(word.length() > max) {
+		    	max = word.length();
+		    }
+		}
+
+		List<String> longWords = new ArrayList<String>();
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+		    String word = entry.getKey();
+		    if( (word.length() == max && !word.contains("'") && !word.contains("-") ) ) {
+		    	longWords.add(word);
+		    }
+		}
+		return longWords;
+	}
+	
+//  returns list of all words of shortest length in letters
+//  list may contain only one word if there is a true shortest word
+	public static List<String> shortest(Map<String,Integer> wordMap) {
+		String[]words = wordMap.keySet().toArray(new String[0]);
+		int min = Integer.MAX_VALUE;
+		for(int i = 0; i < words.length; i++) {
+		    String word = words[i];
+		    if(word.length() < min) {
+		    	min = word.length();
+		    }
+		}
+
+		List<String> longWords = new ArrayList<String>();
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+		    String word = entry.getKey();
+		    if( (word.length() == min && !word.contains("'") && !word.contains("-") ) ) {
+		    	longWords.add(word);
+		    }
+		}
+		return longWords;
+	}
+	
+	//total amount of words in the song
+	//includes duplicates
+	public static int totalWords(Map<String,Integer> wordMap) {
+		int tot = 0;
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+		    int count = entry.getValue();		    
+		    tot += count;
+		}
+        	return tot;
+	}
+	
+	//total amount of lines in the song
+	public static int totalLines(BufferedReader in) {
+		int tot = 0;
+		try {
+            		String line = in.readLine();
+            		while (line != null) {
+            			tot++;	
+            			line = in.readLine();
+            		}
+		} catch (IOException e) {
+	        	System.err.print(e);
+	        }    
+		return tot;
+	}
+	
+	//list of all words that only occur once
+	public static List<String> unique(Map<String,Integer> wordMap) {		
+		List<String> uniqueWords = new ArrayList<String>();
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+		    String word = entry.getKey();
+		    int count = entry.getValue();
+		    if(count == 1) {
+		    	uniqueWords.add(word);
+		    }
+		}
+		return uniqueWords;
+	}
+	
+	//mostFreq helper method
+	//finds word that occurs most frequently -> returns how many times that word occurs
+	public static int most(Map<String,Integer> wordMap) {
+		Integer[] ints =  wordMap.values().toArray(new Integer[0]);
+		int highest = Integer.MIN_VALUE;
+		for(int i = 0; i < ints.length; i++) {
+			if(ints[i] > highest) {
+				highest = ints[i];
+			}
+		}
+		return highest;
+	}
+	
+	//list of one or more words that occur most frequently
+	public static List<String> mostFreq(Map<String,Integer> wordMap) {
+		int highest = most(wordMap);
+		List<String> mostCommon = new ArrayList<String>();
+		for (Map.Entry<String,Integer> entry : wordMap.entrySet()) {
+		    String word = entry.getKey();
+		    int count = entry.getValue();
+		    if(count == highest) {
+		    	mostCommon.add(word);
+		    }
+		}
+		return mostCommon;
+	}
+	
+	//determine if word is present in song and output its word count
+	//if word is not present, output 'not present'
+	public static void spotlightSearch(Map<String,Integer> wordMap, String word) {
+		if(wordMap.containsKey(word)) {
+			System.out.print(word + ": " + wordMap.get(word) + "\n");
+		} else {
+			System.out.println(word + " is not in this song.");
+		}	
+	}
+	
+	public static void main(String[] args) {
+			
+		try (Scanner in = new Scanner(System.in)) {
+			System.out.print("Enter input file name: ");
+			
+			String fileName = "data/";
+			String fileName = "";
+		        fileName += in.nextLine();
+		        //fileName += ".txt";
+			
+			//System.out.println("Lets do this");
+			//BufferedReader from .txt file containing full transcription of song lyrics
+			BufferedReader inFile;
+			BufferedReader inFile2;
+			BufferedReader inFile3;
+
+			try {
+				inFile = new BufferedReader(new FileReader(fileName));
+				inFile2 = new BufferedReader(new FileReader(fileName));
+				inFile3 = new BufferedReader(new FileReader(fileName));
+			} catch (FileNotFoundException e) {
+					System.err.print(e);
+					in.close();
+					return; 
+			}
+			
+			//map contains each word and respective count
+			Map<String,Integer> wordsCount = wordMap(inFile,true);
+			//map contains each line and respective count
+			Map<String,Integer> linesCount = wordMap(inFile2,false);
+			System.out.println(fileName.substring(5, fileName.length()-4) + " has been parsed successfully!");
+			System.out.println();
+			
+			double mean = meanLen(wordsCount);			
+			List<Double> q = quartiles(wordsCount); 
+			double sd = sd(wordsCount);
+			int wordTotal = totalWords(wordsCount);
+			int lineTotal = totalLines(inFile3);
+			List <String> longWordList = longest(wordsCount);
+			int longWordLen = longWordList.get(0).length();
+			List <String> shortWordList = shortest(wordsCount);
+			int shortWordLen = shortWordList.get(0).length();
+			int range = longWordLen - shortWordLen;
+			List <String> uniqueList = unique(wordsCount);
+			int wordTheMost = most(wordsCount);
+			List <String> topWord = mostFreq(wordsCount);
+			int lineTheMost = most(linesCount);
+			List <String> topLine = mostFreq(linesCount);
+			
+			String input = "";
+			while(!input.equals("exit")) {
+				System.out.println();
+				//menu
+				System.out.println("1: Words and their occurences print out");
+				System.out.println("2: Word and line totals");
+				System.out.println("3: Word letter count summary");
+				System.out.println("4: Shortest length word(s)");
+				System.out.println("5: Longest length word(s)");
+				System.out.println("6: unique word(s)");
+				System.out.println("7: most frequent word(s)");
+				System.out.println("8: most frequent line(s)");
+				System.out.println("9: word spotlight search");
+				System.out.println("10: Total Analysis");
+				System.out.println("exit");
+				System.out.println();
+				System.out.print("Selection: ");
+
+				input = in.nextLine();
+				
+				System.out.println();
+				if(input.equals("1")) {
+					System.out.println("******************************************* ");
+					Set<Map.Entry<String, Integer>> tempSet = wordsCount.entrySet();
+			        List<Map.Entry<String, Integer>> sortsMapPairArrayL = new ArrayList<Map.Entry<String, Integer>>(tempSet);
+			        
+			        //sorted list of every single word from smallest amount of letters to largest
+			        Collections.sort(sortsMapPairArrayL, new Comparator<Map.Entry<String, Integer>>() {
+			        	public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+			                return o2.getValue().compareTo(o1.getValue());
+			            }
+			        });
+					for (Map.Entry<String,Integer> entry : sortsMapPairArrayL) {
+					    System.out.print(entry.getKey() + ": ");
+					    System.out.print(entry.getValue());
+					    System.out.println();
+					}
+				} else if (input.equals("2")) {
+					System.out.println("******************************************* ");
+					System.out.println("Word Total: " + wordTotal);
+					System.out.println("Unique Word Total: " + wordsCount.size());
+					System.out.println("Line Total: " + lineTotal);
+					System.out.println("Average Word Per Line: " + wordTotal/lineTotal);
+				} else if (input.equals("3")) {
+					System.out.println("******************************************* ");
+					System.out.println("Mean: " +  String.format("%.3f",mean));
+					System.out.println("Q1: " +  String.format("%.1f",q.get(0)));
+					System.out.println("Median: " +  String.format("%.1f",q.get(1)));
+					System.out.println("Q3: " +  String.format("%.1f",q.get(2)));
+					System.out.println("IQR: " +  String.format("%.1f",q.get(2) - q.get(0)));
+					System.out.println("Standard Deviation: " + String.format("%.3f", sd) );
+					System.out.println("Range: " + range);
+				} else if (input.equals("4")) {
+					System.out.println("******************************************* ");
+					System.out.println("Lenth of shortest word(s): " + shortWordLen);
+					System.out.println(shortWordList.size() + " word(s) contain " + shortWordLen + " letter(s)...");
+					for(String s: shortWordList) {
+						System.out.println("\"" + s + "\"");
+					}
+				} else if (input.equals("5")) {
+					System.out.println("******************************************* ");
+					System.out.println("Lenth of longest word(s): " + longWordLen);
+					System.out.println(longWordList.size() + " word(s) contain " + longWordLen + " letter(s)...");
+					for(String s: longWordList) {
+						System.out.println("\"" + s + "\"");
+					}
+				} else if (input.equals("6")) {
+					System.out.println("******************************************* ");
+					System.out.println("There is " + uniqueList.size() + " unique word(s): ");
+					for(String s: uniqueList) {
+						System.out.println("\"" + s + "\"");
+					}
+				} else if (input.equals("7")) {
+					System.out.println("******************************************* ");
+					System.out.println("The most frequent word(s) appear " + wordTheMost + " times: ");
+					System.out.println(topWord.toString());
+				} else if (input.equals("8")) {
+					System.out.println("******************************************* ");
+					System.out.println("The most frequent line(s) appear " + lineTheMost + " times: ");
+					for(int i = 0; i < topLine.size(); i++) {
+						System.out.println("\n\"" + topLine.get(i) + "\"");
+					}
+				} else if (input.equals("9")) {
+					System.out.println("******************************************* ");
+					System.out.print("Enter word to look up: ");
+					String spot = in.nextLine();
+					spotlightSearch(wordsCount, spot);
+				} else if (input.equals("10")) {
+					System.out.println("******************************************* ");
+					Set<Map.Entry<String, Integer>> tempSet = wordsCount.entrySet();
+			        List<Map.Entry<String, Integer>> sortsMapPairArrayL = new ArrayList<Map.Entry<String, Integer>>(tempSet);
+			        
+			        //sorted list of every single word from smallest amount of letters to largest
+			        Collections.sort(sortsMapPairArrayL, new Comparator<Map.Entry<String, Integer>>() {
+			        	public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+			                return o2.getValue().compareTo(o1.getValue());
+			            }
+			        });
+					for (Map.Entry<String,Integer> entry : sortsMapPairArrayL) {
+					    System.out.print(entry.getKey() + ": ");
+					    System.out.print(entry.getValue());
+					    System.out.println();
+					}
+					System.out.println();
+					System.out.println("Word Total: " + wordTotal);
+					System.out.println("Unique Word Total: " + wordsCount.size());
+					System.out.println("Line Total: " + lineTotal);
+					System.out.println("Average Word Per Line: " + wordTotal/lineTotal);
+					System.out.println();
+					System.out.println("Mean: " +  String.format("%.3f",mean));
+					System.out.println("Q1: " +  String.format("%.1f",q.get(0)));
+					System.out.println("Median: " +  String.format("%.1f",q.get(1)));
+					System.out.println("Q3: " +  String.format("%.1f",q.get(2)));
+					System.out.println("IQR: " +  String.format("%.1f",q.get(2) - q.get(0)));
+					System.out.println("Standard Deviation: " + String.format("%.3f", sd) );
+					System.out.println("Range: " + range);
+					System.out.println();
+					System.out.println("Lenth of shortest word(s): " + shortWordLen);
+					System.out.println(shortWordList.size() + " word(s) contain " + shortWordLen + " letter(s)...");
+					System.out.println(shortWordList.toString());
+					System.out.println();
+					System.out.println("Lenth of longest word(s): " + longWordLen);
+					System.out.println(longWordList.size() + " word(s) contain " + longWordLen + " letter(s)...");
+					System.out.println(longWordList.toString());
+					System.out.println();
+					System.out.println("There is " + uniqueList.size() + " unique word(s): ");
+					System.out.println(uniqueList.toString());
+					System.out.println();
+					System.out.println("The most frequent word(s) appear " + wordTheMost + " times: ");
+					System.out.println(topWord.toString());
+					System.out.println();
+					System.out.println("The most frequent line(s) appear " + lineTheMost + " times: ");
+					for(int i = 0; i < topLine.size(); i++) {
+						System.out.println("\n\"" + topLine.get(i) + "\"");
+					}
+				} else if (input.equals("exit")) {
+					break;
+				} 				
+				System.out.print("******************************************* ");
+				System.out.println("\n");
+				System.out.print("again? [y/n]");
+				input = in.nextLine();
+				if (input.equals("n")) {
+					break;
+				}
+			}
+			System.out.println("\n" + fileName.substring(5,fileName.length()-4) + " analysis has concluded.");
+			
+			try {
+				inFile.close();
+				inFile2.close();
+				inFile3.close();
+			} catch (IOException e) {
+			    System.err.print(e);
+			}
+		}
+	}
+}
