@@ -1,0 +1,327 @@
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+/**
+ * @author Paul Fierman
+ */
+class LyricAnalyzerTest {
+	//meanLen(Map<String,Integer> wordMap)
+	@Test
+	public void meanLenOneElement() {
+		    Map<String,Integer> words = new HashMap<String,Integer>();
+		    words.put("one",1);
+			double trueMean =  ("one".length()) / (double)words.size() ;
+	        double testMean = LyricAnalyzer.meanLen(words);
+	        assertEquals(trueMean,testMean);
+	}
+	@Test
+	public void meanLenEvenNumElements() {
+		    Map<String,Integer> words = new HashMap<String,Integer>();
+		    words.put("one",1);
+		    words.put("two",2);
+		    words.put("three",3);
+		    words.put("four",4);
+			double trueMean =  ("one".length() + "two".length() + "three".length() + "four".length() ) / (double)words.size() ;
+	        double testMean = LyricAnalyzer.meanLen(words);
+	        assertEquals(trueMean,testMean);
+	}
+	@Test
+	public void meanLenOddNumElements() {
+		    Map<String,Integer> words = new HashMap<String,Integer>();
+		    words.put("one",1);
+		    words.put("two",2);
+		    words.put("three",3); 
+			double trueMean =  ("one".length() + "two".length() + "three".length() ) / (double)words.size() ;
+	        double testMean = LyricAnalyzer.meanLen(words);
+	        assertEquals(trueMean,testMean);
+	}
+	
+
+	//sortList(List<Integer> toSort)
+	@Test
+	public void sortListEvenNumElements() {
+		List<Integer> trueList = new ArrayList<Integer>();
+		trueList.add(1);
+		trueList.add(2);
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(2);
+		testList.add(1);
+		LyricAnalyzer.sortList(testList);
+		assertEquals(trueList,testList);
+	}
+	@Test
+	public void sortListOddNumElements() {
+		List<Integer> trueList = new ArrayList<Integer>();
+		trueList.add(1);
+		trueList.add(2);
+		trueList.add(3);
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(3);
+		testList.add(2);
+		testList.add(1);
+		LyricAnalyzer.sortList(testList);
+		assertEquals(trueList,testList);
+	}
+	
+	
+	//medianLen(List<Integer> sorted)
+	@Test
+	public void medianLenOneElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		double testMedian = LyricAnalyzer.medianLen(testList);
+		assertEquals(1,testMedian);
+	}
+	@Test
+	public void medianLenEvenNumElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		testList.add(2);
+		testList.add(3);
+		testList.add(4);
+		double testMedian = LyricAnalyzer.medianLen(testList);
+		assertEquals(2.5,testMedian);
+	}
+	@Test
+	public void medianLenOddNumElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		testList.add(2);
+		testList.add(3);
+		double testMedian = LyricAnalyzer.medianLen(testList);
+		assertEquals(2,testMedian);
+	}
+	
+	
+	//q1(List<Integer> sorted)
+	@Test
+	public void q1evenNumElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		testList.add(2);
+		testList.add(3);
+		testList.add(4);
+		testList.add(5);
+		testList.add(6);
+		double testQ1 = LyricAnalyzer.q1(testList);
+		assertEquals(2,testQ1);
+	}
+	@Test
+	public void q1oddNumElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		testList.add(2);
+		testList.add(3);
+		testList.add(4);
+		testList.add(5);
+		testList.add(6);
+		testList.add(7);
+		double testQ1 = LyricAnalyzer.q1(testList);
+		assertEquals(2,testQ1);
+	}
+	
+	
+	//q3(List<Integer> sorted)
+	@Test
+	public void q3evenNumElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		testList.add(2);
+		testList.add(3);
+		testList.add(4);
+		testList.add(5);
+		testList.add(6);
+		double testQ3 = LyricAnalyzer.q3(testList);
+		assertEquals(5,testQ3);
+	}
+	@Test
+	public void q3oddNumElements() {
+		List<Integer> testList = new ArrayList<Integer>();
+		testList.add(1);
+		testList.add(2);
+		testList.add(3);
+		testList.add(4);
+		testList.add(5);
+		testList.add(6);
+		testList.add(7);
+		double testQ3 = LyricAnalyzer.q3(testList);
+		assertEquals(5.5,testQ3);
+	}
+	
+	
+	//sd(Map<String,Integer> wordMap)
+	@Test
+	public void sdOddNumElements() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+	    words.put("1",1);
+	    words.put("333",1);
+	    words.put("55555",1);
+	    words.put("7777777",1);
+	    words.put("999999999",9);
+		double testSD = LyricAnalyzer.sd(words);
+		assertEquals(Math.sqrt(8),testSD);
+	}
+	
+	
+	//longest(Map<String,Integer> wordMap)
+	@Test
+	public void longestSingle() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+	    words.put("short",2);
+	    words.put("dummy",3);
+	    words.put("LONGEST",5);  
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("LONGEST");
+	    List<String> testList = LyricAnalyzer.longest(words);
+		assertEquals(trueList,testList);
+	}
+	@Test
+	public void longestMultiple() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1234567",10);
+		words.put("short",2);
+	    words.put("dummy",3);
+	    words.put("LONGEST",5);  
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("1234567");
+	    trueList.add("LONGEST");
+	    List<String> testList = LyricAnalyzer.longest(words);
+		assertEquals(trueList,testList);
+	}
+	
+	
+	//shortest(Map<String,Integer> wordMap)
+	@Test
+	public void shortestSingle() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+	    words.put("short",2);
+	    words.put("1234566",3);
+	    words.put("fviuhrvhuih",5);  
+	    words.put("fviuhrvhvjhbuih",5);  
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("short");
+	    List<String> testList = LyricAnalyzer.shortest(words);
+		assertEquals(trueList,testList);
+	}
+	@Test
+	public void shortestMultiple() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1234567",10);
+		words.put("four",2);
+	    words.put("tiny",3);
+	    words.put("LONGEST",5);  
+	    words.put("rifyg8f",5); 
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("four");
+	    trueList.add("tiny");
+	    List<String> testList = LyricAnalyzer.shortest(words);
+		assertEquals(trueList,testList);
+	}
+	
+	
+	//totalWords(Map<String,Integer> wordMap)
+	@Test
+	public void totalOne() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1",1);
+	    int trueTotal = (1);
+	    int testTotal = LyricAnalyzer.totalWords(words);
+		assertEquals(trueTotal,testTotal);
+	}
+	@Test
+	public void totalMultiple() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1",10);
+		words.put("2",9);
+	    words.put("3",45);
+	    words.put("4",2);  
+	    words.put("5",23); 
+	    int trueTotal = (10 + 9 + 45 + 2 + 23);
+	    int testTotal = LyricAnalyzer.totalWords(words);
+		assertEquals(trueTotal,testTotal);
+	}
+	
+	
+	//List<String> unique(Map<String,Integer> wordMap)
+	@Test
+	public void uniqueOne() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1234567",10);
+		words.put("four",2);
+	    words.put("unique",1);
+	    words.put("LONGEST",5);  
+	    words.put("rifyg8f",5); 
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("unique");
+	    List<String> testList = LyricAnalyzer.unique(words);
+		assertEquals(trueList,testList);
+	}
+	@Test
+	public void uniqueMultiple() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1234567",10);
+		words.put("four",2);
+	    words.put("uniqueOne",1);
+	    words.put("LONGEST",5); 
+	    words.put("uniqueTwo",1);
+	    words.put("rifyg8f",5); 
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("uniqueTwo");
+	    trueList.add("uniqueOne");
+	    List<String> testList = LyricAnalyzer.unique(words);
+		assertEquals(trueList,testList);
+	}
+	
+	
+	//most(Map<String,Integer> wordMap)
+	@Test
+	public void most() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1",10);
+		words.put("2",9);
+		words.put("most",45);
+		words.put("4",2);  
+		words.put("5",23); 
+		int trueMost = words.get("most");
+		int testMost = LyricAnalyzer.most(words);
+		assertEquals(trueMost,testMost);
+	}
+	
+	
+	//List<String> mostFreq(Map<String,Integer> wordMap)
+	@Test
+	public void mostFreqOne() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1234567",10);
+		words.put("four",2);
+	    words.put("uniqueOne",1);
+	    words.put("most",1243); 
+	    words.put("uniqueTwo",1);
+	    words.put("rifyg8f",5); 
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("most");
+	    List<String> testList = LyricAnalyzer.mostFreq(words);
+		assertEquals(trueList,testList);
+	}
+	@Test
+	public void mostFreqMultiple() {
+		Map<String,Integer> words = new HashMap<String,Integer>();
+		words.put("1234567",10);
+		words.put("four",2);
+		words.put("mostOne",1243); 
+	    words.put("uniqueOne",1);
+	    words.put("mostTwo",1243); 
+	    words.put("uniqueTwo",1);
+	    words.put("rifyg8f",5); 
+	    List<String> trueList = new ArrayList<String>();
+	    trueList.add("mostTwo");
+	    trueList.add("mostOne");
+	    List<String> testList = LyricAnalyzer.mostFreq(words);
+		assertEquals(trueList,testList);
+	}
+}
