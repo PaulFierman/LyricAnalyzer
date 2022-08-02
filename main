@@ -347,10 +347,10 @@ public class LyricAnalyzer {
 				System.out.println("3: Word letter count summary");
 				System.out.println("4: Shortest length word(s)");
 				System.out.println("5: Longest length word(s)");
-				System.out.println("6: unique word(s)");
-				System.out.println("7: most frequent word(s)");
-				System.out.println("8: most frequent line(s)");
-				System.out.println("9: word spotlight search");
+				System.out.println("6: Unique word(s)");
+				System.out.println("7: Most frequent word(s)");
+				System.out.println("8: Most frequent line(s)");
+				System.out.println("9: Word spotlight search");
 				System.out.println("10: Total Analysis");
 				System.out.println("exit");
 				System.out.println();
